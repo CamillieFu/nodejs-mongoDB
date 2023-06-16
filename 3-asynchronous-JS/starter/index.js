@@ -32,15 +32,51 @@ const getDogPic = async () => {
     const data = await readFilePro(`${__dirname}/dog.txt`);
     const dog = data.toString('utf8').trim();
     const res = await superagent.get(`https://dog.ceo/api/breed/${dog}/images/random`);
-    console.log(`Successful api call retrived the img ${res.body.message}`);
+    console.log(`2: Successful retrieved image: ${res.body.message}`);
     await writeFilePro('dog-img.txt', res.body.message);
-    console.log('File (image) successfully written. 👾');
+    console.log('3: File successfully written. 📝');
+
+    // if we wanted multiple pictures
+    const results = [];
+    for (let i = 0; i < 10; i++) {
+      const pic = superagent.get(`https://dog.ceo/api/breed/${dog}/images/random`);
+      results.push(pic);
+    }
+    const allPics = await Promise.all(results);
+    const allPicUrls = allPics.map((pic) => {
+      return pic.body.message;
+    });
+    //
+    allPicUrls.map((url, index) => {
+      writeFilePro(`dog-img${index}.txt`, url);
+    });
+    // all in one file
+    await writeFilePro('dog-imgs.txt', allPicUrls.join('\n'));
+    /////
   } catch (err) {
     console.log(err);
   }
 };
 
-getDogPic();
+// IIFE - immediately invoked function expression
+(async () => {
+  try {
+    console.log('1: Retrieving dog pictures. 📸');
+    const x = await getDogPic();
+  } catch (err) {
+    console.log('ERROR! 💣');
+  }
+})();
+
+/* This method mixes async with promises, so we will do different way
+console.log('will get dog pics');
+getDogPic()
+  .then((x) => {
+    console.log('Done');
+  })
+  .catch((err) => {
+    console.log('ERROR');
+  });
 
 // manually writing promises method
 
@@ -81,3 +117,4 @@ getDogPic();
 //       console.log(err.message);
 //     });
 // });
+*/
