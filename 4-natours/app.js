@@ -1,6 +1,6 @@
 const express = require('express');
 const morgan = require('morgan');
-const fs = require('fs');
+
 const app = express();
 const userRouter = require('./starter/routes/userRoutes');
 const tourRouter = require('./starter/routes/tourRoutes');
@@ -9,11 +9,10 @@ const tourRouter = require('./starter/routes/tourRoutes');
 app.use(express.json());
 if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
-  console.log(process.env.NODE_ENV);
 }
 // custom middleware
 app.use((req, res, next) => {
-  console.log('middleware 🛠');
+  // console.log('middleware 🛠');
   next();
 });
 // adding custom property to req object

@@ -1,4 +1,3 @@
-const { fail } = require('assert');
 const fs = require('fs');
 
 // data
@@ -8,7 +7,7 @@ const tours = JSON.parse(
 
 // middleware
 exports.checkId = (req, res, next, val) => {
-  const tour = tours.find((el) => el.id === parseInt(val));
+  const tour = tours.find((el) => el.id === parseInt(val, 10));
   if (!tour) {
     return res.status(404).json({
       status: 'fail',
@@ -52,7 +51,7 @@ exports.getAllTours = (req, res) => {
 
 exports.createTour = (req, res) => {
   const newId = tours[tours.length - 1].id + 1;
-  const newTour = Object.assign({ id: newId }, req.body);
+  const newTour = Object.assign(req.body, { id: newId });
   tours.push(newTour);
   fs.writeFile(
     `${__dirname}/starter/dev-data/data/tours-simple.json`,
@@ -69,7 +68,7 @@ exports.createTour = (req, res) => {
 };
 
 exports.getTour = (req, res) => {
-  const tour = tours.find((el) => el.id === parseInt(req.params.id));
+  const tour = tours.find((el) => el.id === parseInt(req.params.id, 10));
   // can also times a string by 1 to turn into integer eg req.params.id * 1
   res.status(200).json({
     status: 'success',
@@ -80,7 +79,6 @@ exports.getTour = (req, res) => {
 };
 
 exports.updateTour = (req, res) => {
-  console.log('pretend I updated JSON');
   res.status(202).json({
     status: 'success',
     data: {
@@ -90,7 +88,7 @@ exports.updateTour = (req, res) => {
 };
 
 exports.deleteTour = (req, res) => {
-  const tour = tours.find((el) => el.id === parseInt(req.params.id));
+  const tour = tours.find((el) => el.id === parseInt(req.params.id, 10));
   const index = tours.indexOf(tour);
   tours.splice(index, 1);
   fs.writeFile(
