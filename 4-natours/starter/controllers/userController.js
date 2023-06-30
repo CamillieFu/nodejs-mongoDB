@@ -1,3 +1,4 @@
+const { fail } = require('assert');
 const fs = require('fs');
 
 // data
@@ -5,6 +6,16 @@ const users = JSON.parse(
   fs.readFileSync(`${__dirname}/../dev-data/data/users.json`)
 );
 
+// validation
+exports.checkID = (req, res, next, val) => {
+  if (!val) {
+    return res.status(404).json({
+      status: 'fail',
+      message: 'invalid id',
+    });
+  }
+  next();
+};
 /* handlers */
 exports.getAllUsers = (req, res) => {
   res.status(200).json({
@@ -16,7 +27,7 @@ exports.getAllUsers = (req, res) => {
 
 exports.createUser = (req, res) => {
   const newId = Math.random().toString(36).substring(2, 10);
-  const newUser = Object.assign({ id: newId }, req.body);
+  const newUser = Object.assign({ _id: newId }, req.body);
   users.push(newUser);
   if (!newUser) {
     res.status(500).json({
@@ -43,7 +54,7 @@ exports.createUser = (req, res) => {
 exports.getUser = (req, res) => {
   const { id } = req.params;
   console.log(id);
-  const user = users.find((user) => user.id === id);
+  const user = users.find((user) => user._id == id);
   console.log(user);
   if (!user) {
     res.status(400).json({

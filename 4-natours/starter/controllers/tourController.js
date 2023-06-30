@@ -1,9 +1,43 @@
+const { fail } = require('assert');
 const fs = require('fs');
 
 // data
 const tours = JSON.parse(
   fs.readFileSync(`${__dirname}/../dev-data/data/tours-simple.json`)
 );
+
+// middleware
+exports.checkId = (req, res, next, val) => {
+  const tour = tours.find((el) => el.id === parseInt(val));
+  if (!tour) {
+    return res.status(404).json({
+      status: 'fail',
+      message: 'invalid ID',
+    });
+  }
+  next();
+};
+
+exports.validateFormData = (req, res, next) => {
+  if (!req.body.price || !req.body.name) {
+    return res.status(400).json({
+      status: 'fail',
+      message: 'Missing Name or Price',
+    });
+  }
+  next();
+};
+
+/* HANDLERS */
+exports.checkTourData = (req, res, next, val) => {
+  if (!val) {
+    return res.status(404).json({
+      status: 'fail',
+      message: 'invalid form data',
+    });
+  }
+  next();
+};
 
 // handlers
 exports.getAllTours = (req, res) => {
@@ -35,14 +69,7 @@ exports.createTour = (req, res) => {
 };
 
 exports.getTour = (req, res) => {
-  const { id } = req.params;
-  const tour = tours.find((el) => el.id === parseInt(id));
-  if (!tour) {
-    return res.status(404).json({
-      status: 'fail',
-      message: 'invalid ID',
-    });
-  }
+  const tour = tours.find((el) => el.id === parseInt(req.params.id));
   // can also times a string by 1 to turn into integer eg req.params.id * 1
   res.status(200).json({
     status: 'success',
@@ -63,16 +90,7 @@ exports.updateTour = (req, res) => {
 };
 
 exports.deleteTour = (req, res) => {
-  const { id } = req.params;
-  const tour = tours.find((el) => el.id === parseInt(id));
-  //fail
-  if (!tour) {
-    return res.status(404).json({
-      status: 'fail',
-      message: 'invalid id',
-    });
-  }
-  // success
+  const tour = tours.find((el) => el.id === parseInt(req.params.id));
   const index = tours.indexOf(tour);
   tours.splice(index, 1);
   fs.writeFile(

@@ -1,11 +1,14 @@
 const express = require('express');
 const tourController = require('./../controllers/tourController');
-// routes
+// initialize router
 const router = express.Router();
+// validation middleware
+router.param('id', tourController.checkId);
+// routes
 router
   .route('/')
   .get(tourController.getAllTours)
-  .post(tourController.createTour);
+  .post(tourController.validateFormData, tourController.createTour);
 router
   .route('/:id')
   .get(tourController.getTour)

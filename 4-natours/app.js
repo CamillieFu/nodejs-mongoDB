@@ -7,7 +7,10 @@ const tourRouter = require('./starter/routes/tourRoutes');
 
 // MIDDLEWARE
 app.use(express.json());
-app.use(morgan('dev'));
+if (process.env.NODE_ENV === 'development') {
+  app.use(morgan('dev'));
+  console.log(process.env.NODE_ENV);
+}
 // custom middleware
 app.use((req, res, next) => {
   console.log('middleware 🛠');
