@@ -1,0 +1,23 @@
+## request - response cycle ##
+  app recieves a request for which it will then
+  create a res/req object
+
+In order to process data middlewear is used
+can manipulate the req/res objects
+(in express everything is middleware)
+
+## MIDDLEWARE STACK ##
+  order is defined by order of appearance in code
+  order matters alot in express
+
+  * When creating custom middleware, one must always call the next() function
+  // EXAMPLE
+  app.use((req, res, next) => {
+    // code
+    next();
+  })
+
+  middleware without any routing specified will
+  be applied to each and every request
+
+  global middleware at top of file!
