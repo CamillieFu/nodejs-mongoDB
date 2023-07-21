@@ -1,3 +1,4 @@
+/* eslint-disable node/no-unsupported-features/es-syntax */
 const Tour = require('../models/tourModel');
 
 /* HANDLERS */
@@ -14,7 +15,20 @@ exports.checkTourData = (req, res, next, val) => {
 // handlers
 exports.getAllTours = async (req, res) => {
   try {
-    const tours = await Tour.find();
+    // BUILD QUERY
+    /*make a copy of the query object that won't mutate original*/
+    const queryObj = { ...req.query };
+    // remove certain query terms from the query
+    const excludedFields = ['page', 'sort', 'limit', 'fields'];
+    excludedFields.forEach((el) => delete queryObj[el]);
+
+    // ADVANCED FILTERING
+    /* stringify for editing */ let queryStr = JSON.stringify(queryObj);
+    /* add $ to match mongoDB querying */
+    queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, (match) => `$${match}`);
+    const finalQuery = Tour.find(JSON.parse(queryStr));
+    //fetching
+    const tours = await finalQuery;
     res.status(200).json({
       status: 'success',
       requestedAt: req.requestTime,
