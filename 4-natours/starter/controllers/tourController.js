@@ -1,7 +1,15 @@
 /* eslint-disable node/no-unsupported-features/es-syntax */
+const stateInConstructor = require('eslint-plugin-react/lib/rules/state-in-constructor');
 const Tour = require('../models/tourModel');
 
 /* HANDLERS */
+exports.aliasTopTen = (req, res, next) => {
+  req.query.limit = '5';
+  req.query.sort = 'price,-ratingsAverage';
+  req.query.fields = 'name,price,ratingsAverage,duration,difficulty';
+  next();
+};
+
 exports.checkTourData = (req, res, next, val) => {
   if (!val) {
     return res.status(404).json({
@@ -12,23 +20,69 @@ exports.checkTourData = (req, res, next, val) => {
   next();
 };
 
-// handlers
+class APIFeatures {
+  constructor(query, queryString) {
+    this.query = query;
+    this.queryString = queryString;
+  }
+
+  filter() {
+    const queryObj = { ...this.queryString };
+    const excludedFields = ['page', 'sort', 'limit', 'fields'];
+    excludedFields.forEach((el) => delete queryObj[el]);
+    let queryStr = JSON.stringify(queryObj);
+    queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, (match) => `$${match}`);
+    this.query = this.query.find(JSON.parse(queryStr));
+    return this;
+  }
+}
+
+// FUNCTIONS
 exports.getAllTours = async (req, res) => {
   try {
-    // BUILD QUERY
-    /*make a copy of the query object that won't mutate original*/
+    // 1) BUILD QUERY
+    /* make a copy of the query object that won't mutate original */
     const queryObj = { ...req.query };
     // remove certain query terms from the query
     const excludedFields = ['page', 'sort', 'limit', 'fields'];
     excludedFields.forEach((el) => delete queryObj[el]);
 
-    // ADVANCED FILTERING
+    // 1B) ADVANCED FILTERING
     /* stringify for editing */ let queryStr = JSON.stringify(queryObj);
     /* add $ to match mongoDB querying */
     queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, (match) => `$${match}`);
-    const finalQuery = Tour.find(JSON.parse(queryStr));
+    let query = Tour.find(JSON.parse(queryStr));
+
+    // 2) SORTING
+    if (req.query.sort) {
+      const sortBy = req.query.sort.split(',').join(' ');
+      query = query.sort(sortBy);
+    } else {
+      query = query.sort('-createdAt');
+    }
+
+    // LIMITING
+    if (req.query.fields) {
+      const fields = req.query.fields.split(',').join(' ');
+      query = query.select(fields);
+    } else {
+      query = query.select('-__v');
+    }
+
+    // PAGINATION
+    const page = req.query.page * 1 || 1; /* default is 1 */
+    const limit = req.query.limit * 1 || 100; /* default is 100 */
+    const skip = (page - 1) * limit;
+    query = query.skip(skip).limit(limit);
+    // Throw error if page doesn't exist;
+    if (req.query.page) {
+      const numOfResults = await Tour.countDocuments();
+      if (skip >= numOfResults) throw new Error('Page Does Not Exist');
+    }
+
     //fetching
-    const tours = await finalQuery;
+    const features = new APIFeatures(Tour.find(), req.query).filter();
+    const tours = await features.query;
     res.status(200).json({
       status: 'success',
       requestedAt: req.requestTime,
@@ -89,7 +143,7 @@ exports.updateTour = async (req, res) => {
       new: true,
       runValidators: true,
     });
-    res.status(202).json({
+    res.status(200).json({
       status: 'success',
       data: {
         tour,

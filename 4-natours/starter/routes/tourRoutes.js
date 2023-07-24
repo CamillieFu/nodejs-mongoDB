@@ -4,7 +4,12 @@ const tourController = require('../controllers/tourController');
 const router = express.Router();
 // validation middleware
 // router.param('id', tourController.checkId);
+
 // routes
+// top 5 tours shortcut route
+router
+  .route('/top-5-tours')
+  .get(tourController.aliasTopTen, tourController.getAllTours);
 router
   .route('/')
   .get(tourController.getAllTours)

@@ -48,6 +48,8 @@ const TourSchema = new mongoose.Schema({
   createdAt: {
     type: Date,
     default: Date.now(),
+    // when false, data not sent to client
+    select: false,
   },
   startDates: [Date],
   difficulty: {
