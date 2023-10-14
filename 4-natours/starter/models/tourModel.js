@@ -9,6 +9,8 @@ const TourSchema = new mongoose.Schema(
       required: [true, "A tour must have a name"],
       unique: true,
       trim: true,
+      maxLength: [120, "name cannot exceed 120 characters"],
+      minLength: [5, "name cannot be less than 10 characters"],
     },
     slug: {
       type: String,
@@ -28,6 +30,8 @@ const TourSchema = new mongoose.Schema(
     ratingsAverage: {
       type: Number,
       default: 4.5,
+      min: [1, "rating must be above 1.0"],
+      max: [5, "rating must be below 5.0"],
     },
     ratingsQuantity: {
       type: Number,
@@ -57,6 +61,11 @@ const TourSchema = new mongoose.Schema(
     },
     difficulty: {
       type: String,
+      enum: {
+        values: ["easy", "medium", "difficult", "crazily hard"],
+        message:
+          'Difficulty can only be one of the following: "easy", "medium", "difficult", "crazily hard"',
+      },
       required: [true, "A tour must have a difficulty"],
     },
     startDates: [Date],
@@ -105,20 +114,17 @@ TourSchema.pre(/^find/, function (next) {
   // you can use regular expressions to get around the fact that find command doesn't work for findOne, findanddelete etc
   // this is def better!
   this.find({ secretTour: { $ne: true } });
-  // call next first so that it's not forgotten
   next();
 });
 
 TourSchema.post(/^find/, function (docs, next) {
-  console.log("🧨🧨🧨", docs);
   next();
 });
 // ---------------------------- QUERY MIDDLEWARE END ----------------------------
 
 // ----------------------------AGGREGATE MIDDLEWARE START ----------------------------
 TourSchema.pre("aggregate", function (next) {
-  console.log("👽", this.pipeline());
-  // add stage to aggregate pipeline to hide secret tours (could probably be done at the controller?)
+  // add stage to aggregate pipeline to hide secret tours (could be done at the controller?)
   this.pipeline().unshift({ $match: { secretTour: { $ne: true } } });
   next();
 });

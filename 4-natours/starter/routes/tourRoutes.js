@@ -10,6 +10,7 @@ const router = express.Router();
 router
   .route("/top-5-tours")
   .get(tourController.aliasTopTen, tourController.getAllTours);
+router.route("/monthly-plan/:year").get(tourController.getMonthlyPlan);
 router
   .route("/")
   .get(tourController.getAllTours)
@@ -20,9 +21,4 @@ router
   .get(tourController.getTour)
   .patch(tourController.updateTour)
   .delete(tourController.deleteTour);
-router.route("/monthly-plan/:year").get(
-  // authController.protect,
-  // authController.restrictTo("admin", "lead-guide", "guide"),
-  tourController.getMonthlyPlan
-);
 module.exports = router;
