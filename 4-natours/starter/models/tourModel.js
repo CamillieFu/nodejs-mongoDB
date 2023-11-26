@@ -2,6 +2,8 @@
 // eslint-disable-next-line import/no-extraneous-dependencies
 const mongoose = require("mongoose");
 const slugify = require("slugify");
+const validator = require("validator");
+
 const TourSchema = new mongoose.Schema(
   {
     name: {
@@ -11,6 +13,7 @@ const TourSchema = new mongoose.Schema(
       trim: true,
       maxLength: [120, "name cannot exceed 120 characters"],
       minLength: [5, "name cannot be less than 10 characters"],
+      // example validate: validator.isAlpha,
     },
     slug: {
       type: String,
