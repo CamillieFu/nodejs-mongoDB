@@ -1,5 +1,6 @@
 /* eslint-disable node/no-unsupported-features/es-syntax */
 const Tour = require("../models/tourModel");
+const APIFeatures = require("../utils/apiFeatures");
 
 /* HANDLERS */
 exports.aliasTopTen = (req, res, next) => {
@@ -19,68 +20,55 @@ exports.checkTourData = (req, res, next, val) => {
   next();
 };
 
-class APIFeatures {
-  constructor(query, queryString) {
-    this.query = query;
-    this.queryString = queryString;
-  }
-
-  filter() {
-    const queryObj = { ...this.queryString };
-    const excludedFields = ["page", "sort", "limit", "fields"];
-    excludedFields.forEach((el) => delete queryObj[el]);
-    let queryStr = JSON.stringify(queryObj);
-    queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, (match) => `$${match}`);
-    this.query = this.query.find(JSON.parse(queryStr));
-    return this;
-  }
-}
-
 // FUNCTIONS
 exports.getAllTours = async (req, res, next) => {
   try {
     // 1) BUILD QUERY
     /* make a copy of the query object that won't mutate original */
-    const queryObj = { ...req.query };
-    // remove certain query terms from the query
-    const excludedFields = ["page", "sort", "limit", "fields"];
-    excludedFields.forEach((el) => delete queryObj[el]);
+    // const queryObj = { ...req.query };
+    // // remove certain query terms from the query
+    // const excludedFields = ["page", "sort", "limit", "fields"];
+    // excludedFields.forEach((el) => delete queryObj[el]);
 
-    // 1B) ADVANCED FILTERING
-    /* stringify for editing */ let queryStr = JSON.stringify(queryObj);
-    /* add $ to match mongoDB querying */
-    queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, (match) => `$${match}`);
-    let query = Tour.find(JSON.parse(queryStr));
+    // // 1B) ADVANCED FILTERING
+    // /* stringify for editing */ let queryStr = JSON.stringify(queryObj);
+    // /* add $ to match mongoDB querying */
+    // queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, (match) => `$${match}`);
+    // let query = Tour.find(JSON.parse(queryStr));
 
-    // 2) SORTING
-    if (req.query.sort) {
-      const sortBy = req.query.sort.split(",").join(" ");
-      query = query.sort(sortBy);
-    } else {
-      query = query.sort("-createdAt");
-    }
+    // // 2) SORTING
+    // if (req.query.sort) {
+    //   const sortBy = req.query.sort.split(",").join(" ");
+    //   query = query.sort(sortBy);
+    // } else {
+    //   query = query.sort("-createdAt");
+    // }
 
-    // LIMITING
-    if (req.query.fields) {
-      const fields = req.query.fields.split(",").join(" ");
-      query = query.select(fields);
-    } else {
-      query = query.select("-__v");
-    }
+    // // LIMITING
+    // if (req.query.fields) {
+    //   const fields = req.query.fields.split(",").join(" ");
+    //   query = query.select(fields);
+    // } else {
+    //   query = query.select("-__v");
+    // }
 
-    // PAGINATION
-    const page = req.query.page * 1 || 1; /* default is 1 */
-    const limit = req.query.limit * 1 || 100; /* default is 100 */
-    const skip = (page - 1) * limit;
-    query = query.skip(skip).limit(limit);
-    // Throw error if page doesn't exist;
-    if (req.query.page) {
-      const numOfResults = await Tour.countDocuments();
-      if (skip >= numOfResults) throw new Error("Page Does Not Exist");
-    }
+    // // PAGINATION
+    // const page = req.query.page * 1 || 1; /* default is 1 */
+    // const limit = req.query.limit * 1 || 100; /* default is 100 */
+    // const skip = (page - 1) * limit;
+    // query = query.skip(skip).limit(limit);
+    // // Throw error if page doesn't exist;
+    // if (req.query.page) {
+    //   const numOfResults = await Tour.countDocuments();
+    //   if (skip >= numOfResults) throw new Error("Page Does Not Exist");
+    // }
 
-    //fetching
-    const features = new APIFeatures(Tour.find(), req.query).filter();
+    // EXEUCUTE QUERY
+    const features = new APIFeatures(Tour.find(), req.query)
+      .filter()
+      .sort()
+      .limit()
+      .paginate();
     const tours = await features.query;
     res.status(200).json({
       status: "success",

@@ -6,6 +6,9 @@ class APIFeatures {
 
   filter() {
     // eslint-disable-next-line node/no-unsupported-features/es-syntax
+    // /* stringify for editing */ let queryStr = JSON.stringify(queryObj);
+    // /* add $ to match mongoDB querying */
+    /* make a copy of the query object that won't mutate original */
     const queryObj = { ...this.queryString };
     const excludedFields = ["page", "sort", "limit", "fields"];
     excludedFields.forEach((el) => delete queryObj[el]);
